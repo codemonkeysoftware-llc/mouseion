@@ -1,0 +1,5 @@
+CREATE TABLE log_entry (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp INTEGER,
+    text TEXT NOT NULL
+);

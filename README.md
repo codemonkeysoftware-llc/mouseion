@@ -16,7 +16,7 @@ What Mouseion is not:
 * Bloated. We're not going to implement all the features every business needs. Again, it's simple.
 
 How it works:
-1. An application sends log data to Mouseion. The application sends the entry with a timestamp, the entry text, and a set of tags (if desired)
-2. Mouseion stores those log entries, deduplicating as necessary.
-3. When something happens, you log in and look at your entries by time and optionally by tag.
+1. A _source_ sends log data to the Mouseion _server_. The source sends the entry with a timestamp, the entry text, and a set of tags (if desired)
+2. The server stores those log entries, deduplicating as necessary.
+3. When something happens, you log in with the _client_ and look at your entries by time and optionally by tag.
 4. You fix things and save the day.
