@@ -8,6 +8,10 @@ import (
 )
 
 func TestSendData(t *testing.T) {
-	logger := source.NewLogger("http://localhost:8069", &http.Client{}, true)
+	logger := source.Logger{
+		MouseionHost: "http://localhost:8069",
+		HTTPClient:   &http.Client{},
+		LogErrors:    true,
+	}
 	logger.Print("hello")
 }
