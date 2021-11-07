@@ -3,7 +3,6 @@ package sqlstore
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/codemonkeysoftware/mouseion/pkg/entry"
@@ -80,7 +79,6 @@ func (sqlStore *SQLStore) GetEntries(ctx context.Context, start, end time.Time, 
 			return nil, err
 		}
 		entry.Timestamp = parseUnixUTC(timestamp)
-		log.Println(entry)
 		tags, err := sqlStore.GetTagsForEntry(ctx, entry.ID)
 		if err != nil {
 			return nil, fmt.Errorf("entry tags: %w", err)
