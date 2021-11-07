@@ -3,7 +3,8 @@ package entry
 import "time"
 
 type LogEntry struct {
-	Timestamp time.Time `json:"timestamp"`
-	Text      string    `json:"text"`
+	ID        int       `json:"id" db:"id"`
+	Timestamp time.Time `json:"timestamp" db:"timestamp"`
+	Text      string    `json:"text" db:"text"`
 	Tags      []string  `json:"tags"`
 }

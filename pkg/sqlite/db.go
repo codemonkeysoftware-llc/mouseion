@@ -21,7 +21,7 @@ func Open(path string) *sqlx.DB {
 	db := sqlx.MustOpen("sqlite3", path)
 	var version string
 	db.Get(&version, "SELECT sqlite_version()")
-	log.Println(version)
+	log.Printf("Using sqlite version %s", version)
 	return db
 }
 

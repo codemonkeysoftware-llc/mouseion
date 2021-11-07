@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	log.Println("opening db")
 	db := sqlite.Open("./mouseion.db")
 	defer db.Close()
 	err := sqlite.DoMigrations(db.DB)
