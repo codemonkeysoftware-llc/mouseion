@@ -9,5 +9,5 @@ import (
 
 type EntryStorer interface {
 	Save(ctx context.Context, logEntry *entry.LogEntry) error
-	GetRange(ctx context.Context, start, end time.Time) ([]entry.LogEntry, error)
+	GetEntries(ctx context.Context, start, end time.Time, tags []string) ([]entry.LogEntry, error)
 }

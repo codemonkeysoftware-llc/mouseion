@@ -26,10 +26,11 @@ func TestEntryLifecycle(t *testing.T) {
 	}()
 	store := sqlstore.New(db)
 	entryDate := time.Date(2011, 11, 11, 11, 11, 11, 11, time.UTC)
+	const goodTag = "good"
 	logEntry := entry.LogEntry{
 		Timestamp: entryDate,
 		Text:      "peppero day",
-		Tags:      []string{"snacks", "dates"},
+		Tags:      []string{"snacks", "dates", goodTag},
 	}
 	err = store.Save(context.Background(), &logEntry)
 	if err != nil {
@@ -56,10 +57,11 @@ func TestEntryLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	results, err := store.GetRange(
+	results, err := store.GetEntries(
 		context.Background(),
 		entryDate.Add(-time.Second*10),
 		entryDate.Add(time.Second*10),
+		nil,
 	)
 
 	if err != nil {
@@ -75,10 +77,12 @@ func TestEntryLifecycle(t *testing.T) {
 		log.Fatalf("expected timestamp %s, got %s", logEntry.Timestamp, results[0].Timestamp)
 	}
 
-	results, err = store.GetRange(
+	// gets all entries with empty times
+	results, err = store.GetEntries(
 		context.Background(),
 		time.Time{},
 		time.Time{},
+		nil,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -86,6 +90,21 @@ func TestEntryLifecycle(t *testing.T) {
 
 	if len(results) != 3 {
 		t.Fatalf("expected 3 results, got %d", len(results))
+	}
+
+	// filters by tag
+	results, err = store.GetEntries(
+		context.Background(),
+		time.Time{},
+		time.Time{},
+		[]string{goodTag},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 results, got %d", len(results))
 	}
 }
 
@@ -124,7 +143,7 @@ func BenchmarkGetRange(b *testing.B) {
 			store.Save(context.Background(), &logEntry)
 		}
 		b.ResetTimer()
-		_, err = store.GetRange(context.Background(), time.Time{}, time.Time{})
+		_, err = store.GetEntries(context.Background(), time.Time{}, time.Time{}, nil)
 		b.StopTimer()
 		if err != nil {
 			b.Fatal(err)

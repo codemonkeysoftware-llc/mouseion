@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/codemonkeysoftware/mouseion/pkg/entry"
@@ -54,6 +55,7 @@ func (s *Server) jsonIngest(w http.ResponseWriter, req *http.Request) {
 const (
 	queryStart = "start"
 	queryEnd   = "end"
+	queryTags  = "tags"
 )
 
 func (s *Server) getEntries(w http.ResponseWriter, req *http.Request) {
@@ -64,6 +66,7 @@ func (s *Server) getEntries(w http.ResponseWriter, req *http.Request) {
 	queryValues := req.URL.Query()
 	var (
 		start, end time.Time
+		tags       []string
 	)
 	startQuery := queryValues.Get(queryStart)
 	if startQuery != "" {
@@ -73,8 +76,12 @@ func (s *Server) getEntries(w http.ResponseWriter, req *http.Request) {
 	if endQuery != "" {
 		end, _ = time.Parse(time.RFC3339, endQuery)
 	}
+	tagsQuery := queryValues.Get(queryTags)
+	if tagsQuery != "" {
+		tags = strings.Split(tagsQuery, ",")
+	}
 
-	entries, err := s.entryStorer.GetRange(req.Context(), start, end)
+	entries, err := s.entryStorer.GetEntries(req.Context(), start, end, tags)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -52,21 +52,22 @@ func (sqlStore *SQLStore) Save(ctx context.Context, logEntry *entry.LogEntry) er
 	return nil
 }
 
-func (sqlStore *SQLStore) GetRange(ctx context.Context, start, end time.Time) ([]entry.LogEntry, error) {
+func (sqlStore *SQLStore) GetEntries(ctx context.Context, start, end time.Time, tags []string) ([]entry.LogEntry, error) {
 	if start.IsZero() {
 		start = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 	if end.IsZero() {
 		end = time.Date(2030, 1, 1, 1, 1, 1, 1, time.UTC)
 	}
-
-	rows, err := sqlStore.db.QueryxContext(ctx, `
-SELECT id, timestamp, text
-FROM log_entry
-WHERE timestamp >= $1
-AND timestamp <= $2`,
-		start.UnixNano(),
-		end.UnixNano())
+	var (
+		rows *sqlx.Rows
+		err  error
+	)
+	if len(tags) > 0 {
+		rows, err = sqlStore.getFilteredRange(ctx, start, end, tags)
+	} else {
+		rows, err = sqlStore.getRange(ctx, start, end)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("entries: %w", err)
 	}
@@ -89,6 +90,38 @@ AND timestamp <= $2`,
 	}
 
 	return entries, nil
+}
+
+func (sqlStore *SQLStore) getRange(ctx context.Context, start, end time.Time) (*sqlx.Rows, error) {
+	return sqlStore.db.QueryxContext(ctx, `
+SELECT id, timestamp, text
+FROM log_entry
+WHERE timestamp >= $1
+AND timestamp <= $2`,
+		start.UnixNano(),
+		end.UnixNano())
+}
+
+func (sqlStore *SQLStore) getFilteredRange(ctx context.Context, start, end time.Time, tags []string) (*sqlx.Rows, error) {
+	query, args, err := sqlx.In(`
+	SELECT id, timestamp, text
+	FROM log_entry
+	WHERE timestamp >= ?
+	AND timestamp <= ?
+	AND id IN (
+		SELECT entry_id
+		FROM entry_tag
+		WHERE tag IN (?)
+		)`,
+		start.UnixNano(),
+		end.UnixNano(),
+		tags,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("filtered bind: %w", err)
+	}
+	query = sqlStore.db.Rebind(query)
+	return sqlStore.db.QueryxContext(ctx, query, args...)
 }
 
 func (sqlStore *SQLStore) GetTagsForEntry(ctx context.Context, entryID int) ([]string, error) {
